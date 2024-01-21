@@ -1,5 +1,7 @@
 //require('dotenv').config({path:'/Users/sidd/VSCode Projects/.env-production'})
 
+
+
 const path = require('path'); // Correct import for the path module
 require('dotenv').config({
   path: path.resolve(__dirname, '.env'), // Adjust the path based on your .env file location
@@ -141,6 +143,8 @@ async function testMetaApiSynchronization() {
         }, initialDelay);
       }
     }
+    
+
     
     
     // Example usage:
@@ -324,17 +328,24 @@ function isBearish(candle) {
   //process.exit();
 }
 
-app.get('/executeMetaApi', async (req, res) => {
-    try {
-      await testMetaApiSynchronization();
-      res.status(200).send('MetaApi execution successful');
-    } catch (err) {
-      console.error(err);
-      res.status(500).send('Internal Server Error');
-    }
-  });
+
+// app.get('/executeMetaApi', async (req, res) => {
+//     try {
+//       await testMetaApiSynchronization();
+//       res.status(200).send('MetaApi execution successful');
+//     } catch (err) {
+//       console.error(err);
+//       res.status(500).send('Internal Server Error');
+//     }
+//   });
   
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+//   app.listen(port, () => {
+//     console.log(`Server is running on port ${port}`);
+//   });
+
+  console.log(`Server is running `);
+  testMetaApiSynchronization();
+
+
+
 
