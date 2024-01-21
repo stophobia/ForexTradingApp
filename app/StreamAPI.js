@@ -1,11 +1,13 @@
 //require('dotenv').config({path:'/Users/sidd/VSCode Projects/.env-production'})
 
-const path = require('/');
+const path = require('path'); // Correct import for the path module
 require('dotenv').config({
-  path: path.resolve('config.env'),
+  path: path.resolve(__dirname, '.env'), // Adjust the path based on your .env file location
 });
+
 // Add this line to check if .env is loaded
 console.log('Environment variables:', process.env);
+let tickInterval;
 
 const express = require('express');
 const MetaApi = require('metaapi.cloud-sdk').default;
@@ -60,38 +62,6 @@ async function testMetaApiSynchronization() {
     await connection.subscribeToMarketData('EURUSD');
     console.log('EURUSDm price:', terminalState.price('EURUSD'));
     
-    
-
-    // access history storage
-    // const historyStorage = connection.historyStorage;
-    // console.log('deals:', historyStorage.deals.slice(-5));
-    // console.log('deals with id=1:', historyStorage.getDealsByTicket(1));
-    // console.log('deals with positionId=1:', historyStorage.getDealsByPosition(1));
-    // console.log('deals for the last day:', historyStorage.getDealsByTimeRange(new Date(Date.now() - 24 * 60 * 60 * 1000),
-    //   new Date()));
-    // console.log('history orders:', historyStorage.historyOrders.slice(-5));
-    // console.log('history orders with id=1:', historyStorage.getHistoryOrdersByTicket(1));
-    // console.log('history orders with positionId=1:', historyStorage.getHistoryOrdersByPosition(1));
-    // console.log('history orders for the last day:', historyStorage.getHistoryOrdersByTimeRange(
-    //   new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()));
-
-      
-
-    
-
-    // calculate margin required for trade
-    // console.log('margin required for trade', await connection.calculateMargin({
-    //   symbol: 'EURUSD',
-    //   type: 'ORDER_TYPE_BUY',
-    //   volume: 0.1,
-    //   openPrice: 1.1
-    // }));
-
-    // console.log(
-    //   'Testing getHistoricalCandles',
-    //   await account.getHistoricalCandles('EURUSD', '5m', new Date(), 10)
-    // );
-
 
     async function get3MinCandles() {
       const currentDateTime = new Date();
@@ -103,61 +73,60 @@ async function testMetaApiSynchronization() {
       console.log('Historical Candles received:', candles);
     
       console.log(`Checking for the valid conditions for the timestamp ${currentDateTime.toISOString()}`);
-      const validCandle = isCandleConditionSatisfied(candles[1], 5, 15);
+      const validCandle = isCandleConditionSatisfied(candles[1], 5, 10);
       console.log('Is Valid Candle?', validCandle);
     
       if (validCandle) {
         console.log('Checking tick data for EURUSD: ');
     
         const calculateInitialDelay = () => {
-            const now = new Date();
-            const secondsUntilNextInterval = 2.5 - (now.getSeconds() % 2.5);
-            return secondsUntilNextInterval * 1000; // Convert seconds to milliseconds
+          const now = new Date();
+          const secondsUntilNextInterval = 2.5 - (now.getSeconds() % 2.5);
+          return secondsUntilNextInterval * 1000; // Convert seconds to milliseconds
         };
     
+        let tickInterval; // Declare tickInterval outside the setTimeout scope
+    
         const checkTickData = async () => {
-            const currentTickDateTime = new Date(); // Get current time for each tick
-            currentTickDateTime.setSeconds(currentTickDateTime.getSeconds() - 3); // Subtract 2 seconds
-            console.log('Checking tick data for:', currentTickDateTime);
-
-
+          const currentTickDateTime = new Date(); // Get current time for each tick
+          currentTickDateTime.setSeconds(currentTickDateTime.getSeconds() - 3); // Subtract 2 seconds
+          console.log('Checking tick data for:', currentTickDateTime);
     
-            try {
-                // Call your getHistoricalTicks method here
-                const latestTicks = await account.getHistoricalTicks('EURUSD', currentTickDateTime, 1, 2);
-                console.log('Latest Tick:', latestTicks);
+          try {
+            // Call your getHistoricalTicks method here
+            const latestTicks = await account.getHistoricalTicks('EURUSD', currentTickDateTime, 1, 2);
+            console.log('Latest Tick:', latestTicks);
     
-                if (latestTicks.length > 0) {
-                    // Place market buy order with target price as candle length and stop loss as candle low
+            if (latestTicks.length > 0) {
+              // Place market buy order with target price as candle length and stop loss as candle low
+              console.log('Placing Market Order:');
+              console.log('Open positions length: ', terminalState.positions.length);
     
-                    console.log('Placing Market Order:');
-                    console.log('Open positions length: ', terminalState.positions.length);
-    
-                    if (isBullish(candles[1]) && terminalState.positions.length <= 0) {
-                        const targetPrice = candles[1].high + (candles[1].high - candles[1].low);
-                        const stopLoss = candles[1].low;
-                        submitMarketBuyOrder('EURUSD', 0.1, targetPrice, stopLoss);
-                        clearInterval(tickInterval);
-                    } else if (isBearish(candles[1]) && terminalState.positions.length <= 0) {
-                        const targetPrice = candles[1].low - (candles[1].high - candles[1].low);
-                        const stopLoss = candles[1].high;
-                        submitMarketSellOrder('EURUSD', 0.1, targetPrice, stopLoss);
-                        clearInterval(tickInterval);
-                    }
-    
-                    // Stop further checking tick data
-                    //clearInterval(tickInterval);
-                }
-    
-                // Stop after 5 minutes
-                if (currentTickDateTime - currentDateTime >= 150000) {
-                    console.log('Stopped checking tick data after 5 minutes.');
-                    clearInterval(tickInterval);
-                }
-            } catch (error) {
-                console.error('Error checking tick data:', error);
+              if (isBullish(candles[1]) && terminalState.positions.length <= 0) {
+                const targetPrice = candles[1].high + (candles[1].high - candles[1].low);
+                const stopLoss = candles[1].low;
+                submitMarketBuyOrder('EURUSD', 0.1, targetPrice, stopLoss);
                 clearInterval(tickInterval);
+              } else if (isBearish(candles[1]) && terminalState.positions.length <= 0) {
+                const targetPrice = candles[1].low - (candles[1].high - candles[1].low);
+                const stopLoss = candles[1].high;
+                submitMarketSellOrder('EURUSD', 0.1, targetPrice, stopLoss);
+                clearInterval(tickInterval);
+              }
+    
+              // Stop further checking tick data
+              clearInterval(tickInterval);
             }
+    
+            // Stop after 5 minutes
+            if (currentTickDateTime - currentDateTime >= 50000) {
+              console.log('Stopped checking tick data after 5 minutes.');
+              clearInterval(tickInterval);
+            }
+          } catch (error) {
+            console.error('Error checking tick data:', error);
+            clearInterval(tickInterval);
+          }
         };
     
         // Calculate the initial delay based on the current time
@@ -165,19 +134,14 @@ async function testMetaApiSynchronization() {
     
         // Execute the first tick check after the initial delay
         setTimeout(() => {
-            checkTickData();
+          checkTickData();
     
-            // Set interval to check tick data every 2.5 seconds
-            const tickInterval = setInterval(checkTickData, 2500); // 2.5 seconds in milliseconds
+          // Set interval to check tick data every 2.5 seconds
+          tickInterval = setInterval(checkTickData, 2500); // 2.5 seconds in milliseconds
         }, initialDelay);
+      }
     }
     
-    
-    
-    
-      // Process the retrieved candles as needed
-      console.log('Candles:', candles);
-    }
     
     // Example usage:
    
@@ -256,8 +220,6 @@ async function testMetaApiSynchronization() {
               distance: 10, // Set your desired distance for trailing stop loss
           };
 
-      
-          
           const opt  = {
               trailingStopLoss
               
