@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iso-converter-api-pipeline-cm
+  namespace: myproject
+  labels:
+    app: myproject
+data:
+  REQUIRED_CONTACT_POINT_PIPELINE_NR: "1"
+  WITHDRAWAL_1200_PORT: localhost:49164
+  POS_1200_API_PORT: localhost:49164
+  ECOM_1200_API_PORT: localhost:49164
+  BALING_1200_API_PORT: localhost:49158
+  PINCHANGE_1220_API_PORT: localhost:49158
+  MAX_OPEN_REQUEST_PRE: "1024"
