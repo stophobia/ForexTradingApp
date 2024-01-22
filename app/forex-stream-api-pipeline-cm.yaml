@@ -1,0 +1,68 @@
+apiVersion: "apps/v1"
+kind: Deployment
+metadata:
+  name: forex-stream-api
+spec:
+  selector:
+    matchLabels:
+      app: forex-stream-api
+  replicas: 1
+
+  template:
+    metadata:
+      labels:
+        app: forex-stream-api
+    spec:
+      containers:
+        - name: forex-stream-api
+          image: vivekmishra91/iso-converter-api:3.0.10-urc-424-b112fe9e-20230829-1304
+          ports:
+            - name: management
+              containerPort: 8558
+          readinessProbe:
+            httpGet:
+              path: "/ready"
+              port: management
+            periodSeconds: 10
+            failureThreshold: 10
+            initialDelaySeconds: 20
+          livenessProbe:
+            httpGet:
+              path: "/alive"
+              port: management
+            periodSeconds: 10
+            failureThreshold: 10
+            initialDelaySeconds: 20
+          env:
+            - name: JAVA_OPTS
+              value: "-Xms256m -Xmx256m -Dconfig.resource=application.conf"
+            - name: APPLICATION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: kafka-to-postauth-secret
+                  key: secret
+            - name: ISO_CONVERTER_API_SVC
+                value: forex-stream-api
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+          envFrom:
+            - configMapRef:
+                name: myproject-pipeline-cm
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: forex-stream-api
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 9000
+  selector:
+    app: forex-stream-api
+  type: LoadBalancer
+
