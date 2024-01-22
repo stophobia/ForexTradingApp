@@ -156,7 +156,7 @@ async function testMetaApiSynchronization() {
     function getCandlesPeriodically() {
       const calculateInitialDelay = () => {
           const now = new Date();
-          const minutesUntilNextInterval = 3 - (now.getMinutes() % 1);
+          const minutesUntilNextInterval = 3 - (now.getMinutes() % 3);
           const secondsUntilNextInterval = (minutesUntilNextInterval * 60) - now.getSeconds();
           return secondsUntilNextInterval * 1000; // Convert seconds to milliseconds
       };
