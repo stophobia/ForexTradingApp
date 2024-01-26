@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: forex-stream-api
-          image: vivekmishra91/iso-converter-api:3.0.10-urc-424-b112fe9e-20230829-1304
+          image: siddharth2506/forex-trading-app:forexTrading-app-01
           ports:
             - name: management
               containerPort: 8558
