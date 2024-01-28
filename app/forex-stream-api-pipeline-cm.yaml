@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: forex-stream-api
-          image: siddharth2506/forex-trading-app:forexTrading-app-01
+          image: siddharth2506/forex-trading-app:forexTrading-app-02
           ports:
             - name: management
               containerPort: 8558
